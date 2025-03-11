@@ -298,10 +298,15 @@ async function main() {
     const currentTrack = decodeURIComponent(splittedTrack);
     const index = songs.indexOf(currentTrack);
 
+    // Debug log: print the current track and its index
+    console.log("Previous clicked. Current track:", currentTrack, "Index:", index);
+
     if (index !== -1) {
       // Wrap-around: if index is 0, go to last
       const prevIndex = (index - 1 + songs.length) % songs.length;
       playMusic(songs[prevIndex]);
+    } else {
+      console.warn("Current track not found in songs array.");
     }
   });
 
@@ -312,10 +317,15 @@ async function main() {
     const currentTrack = decodeURIComponent(splittedTrack);
     const index = songs.indexOf(currentTrack);
 
+    // Debug log: print the current track and its index
+    console.log("Next clicked. Current track:", currentTrack, "Index:", index);
+
     if (index !== -1) {
       // Wrap-around: if index is last, go to first
       const nextIndex = (index + 1) % songs.length;
       playMusic(songs[nextIndex]);
+    } else {
+      console.warn("Current track not found in songs array.");
     }
   });
 
