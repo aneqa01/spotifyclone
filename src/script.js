@@ -176,6 +176,11 @@ async function displayAlbums() {
   // Add event listeners to each album card
   document.querySelectorAll(".card").forEach((card) => {
     card.addEventListener("click", async () => {
+      // Open the left sidebar when an album card is clicked
+      const sidebar = document.querySelector(".left");
+      sidebar.style.left = "0px";
+      sidebar.classList.add("open");
+
       const folder = card.dataset.folder;
       await getSongs(`songs/${folder}`);
       handleSearch();
@@ -185,6 +190,11 @@ async function displayAlbums() {
     const playBtn = card.querySelector(".green-play-btn");
     playBtn.addEventListener("click", async (e) => {
       e.stopPropagation();
+      // Open the left sidebar when the play button is clicked
+      const sidebar = document.querySelector(".left");
+      sidebar.style.left = "0px";
+      sidebar.classList.add("open");
+
       const folder = card.dataset.folder;
       await getSongs(`songs/${folder}`);
 
