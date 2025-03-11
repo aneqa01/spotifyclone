@@ -174,7 +174,7 @@ async function displayAlbums() {
   document.querySelectorAll(".card").forEach((card) => {
     card.addEventListener("click", async () => {
       const folder = card.dataset.folder;
-      await getSongs(`/songs/${folder}`);
+      await getSongs(`/img/songs/${folder}`);
       handleSearch();
       if (songs.length) playMusic(songs[0]); // auto-play first
     });
@@ -183,7 +183,7 @@ async function displayAlbums() {
     playBtn.addEventListener("click", async (e) => {
       e.stopPropagation();
       const folder = card.dataset.folder;
-      await getSongs(`/songs/${folder}`);
+      await getSongs(`/img/songs/${folder}`);
 
       document.getElementById("search-bar").value = "";
       handleSearch();
