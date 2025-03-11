@@ -183,7 +183,7 @@ async function displayAlbums() {
     playBtn.addEventListener("click", async (e) => {
       e.stopPropagation();
       const folder = card.dataset.folder;
-      await getSongs(`songs/${folder}`);
+      await getSongs(`/songs/${folder}`);
 
       document.getElementById("search-bar").value = "";
       handleSearch();
