@@ -142,7 +142,7 @@ async function displayAlbums() {
   // Hardcode the folder names you have in /songs/
   const folders = [
     "Anuv",
-    "Arjit Singh",
+    "Arijit Singh",
     "Atif Aslam",
     "Rahat Fateh",
     "Shankar-Ehsan",
@@ -176,11 +176,6 @@ async function displayAlbums() {
   // Add event listeners to each album card
   document.querySelectorAll(".card").forEach((card) => {
     card.addEventListener("click", async () => {
-      // Open the left sidebar when an album card is clicked
-      const sidebar = document.querySelector(".left");
-      sidebar.style.left = "0px";
-      sidebar.classList.add("open");
-
       const folder = card.dataset.folder;
       await getSongs(`songs/${folder}`);
       handleSearch();
@@ -190,11 +185,6 @@ async function displayAlbums() {
     const playBtn = card.querySelector(".green-play-btn");
     playBtn.addEventListener("click", async (e) => {
       e.stopPropagation();
-      // Open the left sidebar when the play button is clicked
-      const sidebar = document.querySelector(".left");
-      sidebar.style.left = "0px";
-      sidebar.classList.add("open");
-
       const folder = card.dataset.folder;
       await getSongs(`songs/${folder}`);
 
@@ -298,15 +288,10 @@ async function main() {
     const currentTrack = decodeURIComponent(splittedTrack);
     const index = songs.indexOf(currentTrack);
 
-    // Debug log: print the current track and its index
-    console.log("Previous clicked. Current track:", currentTrack, "Index:", index);
-
     if (index !== -1) {
       // Wrap-around: if index is 0, go to last
       const prevIndex = (index - 1 + songs.length) % songs.length;
       playMusic(songs[prevIndex]);
-    } else {
-      console.warn("Current track not found in songs array.");
     }
   });
 
@@ -317,15 +302,10 @@ async function main() {
     const currentTrack = decodeURIComponent(splittedTrack);
     const index = songs.indexOf(currentTrack);
 
-    // Debug log: print the current track and its index
-    console.log("Next clicked. Current track:", currentTrack, "Index:", index);
-
     if (index !== -1) {
       // Wrap-around: if index is last, go to first
       const nextIndex = (index + 1) % songs.length;
       playMusic(songs[nextIndex]);
-    } else {
-      console.warn("Current track not found in songs array.");
     }
   });
 
