@@ -1,143 +1,156 @@
-const currentSong = new Audio()
-let songs
-let currFolder
+const currentSong = new Audio();
+let songs;
+let currFolder;
 
 // Format time function (MM:SS)
 function formatTime(seconds) {
   if (isNaN(seconds) || seconds < 0) {
-    return "00:00"
+    return "00:00";
   }
-  const minutes = Math.floor(seconds / 60)
-  const remainingSeconds = Math.floor(seconds % 60)
-  return `${minutes}:${remainingSeconds < 10 ? "0" : ""}${remainingSeconds}`
+  const minutes = Math.floor(seconds / 60);
+  const remainingSeconds = Math.floor(seconds % 60);
+  return `${minutes}:${remainingSeconds < 10 ? "0" : ""}${remainingSeconds}`;
 }
 
-// Helper functions to extract clean song and artist names
+/**
+ * Remove file extension (.mp3) and ANY mention of '128 Kbps' or '320 Kbps'.
+ * If there's a hyphen, it removes '- 128 Kbps'; also removes ' 128 Kbps' if no hyphen.
+ * Finally, we split on the first hyphen to isolate the earliest part as the displayed name.
+ */
 function extractSongName(filename) {
-  // Remove file extension (.mp3)
-  const nameWithoutExtension = filename.replace(".mp3", "")
-  // Remove "128 Kbps" or any similar extra info
-  const cleanName = nameWithoutExtension.replace(/-\s*\d+\s*Kbps/g, "").trim()
-  // Get only the first part before the hyphen (if exists)
-  return cleanName.split("-")[0].trim()
+  let nameWithoutExtension = filename.replace(".mp3", "");
+  // First remove patterns like "- 128 Kbps" or "- 320 Kbps"
+  nameWithoutExtension = nameWithoutExtension.replace(/-\s*\d+\s*Kbps/g, "");
+  // Then remove if there's no hyphen, e.g. " 128 Kbps"
+  nameWithoutExtension = nameWithoutExtension.replace(/\s*\d+\s*Kbps/g, "");
+  
+  // Trim extra spaces, then split on first hyphen
+  const cleanName = nameWithoutExtension.trim().split("-")[0].trim();
+  return cleanName;
 }
 
+// Same approach for the artist name
 function extractArtistName(filename) {
-  // Remove file extension
-  const nameWithoutExtension = filename.replace(".mp3", "")
-  // Remove "128 Kbps" or any bitrate-related info
-  const cleanName = nameWithoutExtension.replace(/-\s*\d+\s*Kbps/g, "").trim()
-  // Extract the part after the first hyphen
-  const parts = cleanName.split("-")
-  // Ensure extra spaces or unnecessary words are removed
-  const artist = parts.length > 1 ? parts[1].replace(/\d+\s*Kbps/g, "").trim() : "Unknown Artist"
-  return artist
+  let nameWithoutExtension = filename.replace(".mp3", "");
+  nameWithoutExtension = nameWithoutExtension.replace(/-\s*\d+\s*Kbps/g, "");
+  nameWithoutExtension = nameWithoutExtension.replace(/\s*\d+\s*Kbps/g, "");
+  
+  // Then see if there's a second portion after a hyphen
+  const parts = nameWithoutExtension.trim().split("-");
+  return parts.length > 1 ? parts[1].trim() : "Unknown Artist";
 }
 
+// ──────────────────────────────────────────
+//  getSongs(folder) loads songs.json
+// ──────────────────────────────────────────
 async function getSongs(folder) {
-  currFolder = folder
-  const a = await fetch(`/${folder}/`)
-  const response = await a.text()
-  const div = document.createElement("div")
-  div.innerHTML = response
-  const as = div.getElementsByTagName("a")
-  songs = []
+  currFolder = folder;
+  songs = [];
 
-  for (let index = 0; index < as.length; index++) {
-    const element = as[index]
-    if (element.href.endsWith(".mp3")) {
-      songs.push(element.href.split(`/${folder}/`)[1])
-    }
+  // Fetch that folder's songs.json
+  try {
+    const response = await fetch(`/${folder}/songs.json`);
+    songs = await response.json();
+  } catch (error) {
+    console.error(`Error fetching songs.json in folder ${folder}`, error);
+    return songs; // empty if error
   }
 
-  // Show all the songs in the playlist
-  const songUL = document.querySelector(".songlist ul")
-  songUL.innerHTML = ""
+  // Show all songs in the playlist
+  const songUL = document.querySelector(".songlist ul");
+  songUL.innerHTML = "";
 
   for (const song of songs) {
-    const decodedSong = decodeURIComponent(song.trim())
-    const cleanTitle = extractSongName(decodedSong)
-    const cleanArtist = extractArtistName(decodedSong)
+    const decodedSong = decodeURIComponent(song.trim());
+    const cleanTitle = extractSongName(decodedSong);
+    const cleanArtist = extractArtistName(decodedSong);
 
-    songUL.innerHTML += `<li> 
-            <div class="song-info">
-                <img class="invert" src="/img/music.svg" alt="Music Icon">
-                <div class="details">
-                    <div class="song-name">${cleanTitle}</div>
-                    <div class="artist-name">${cleanArtist}</div>
-                </div>
-            </div>
-            <button class="play-song" data-src="${song}">
-                <img class="invert" src="/img/play.svg" alt="Play Icon">
-            </button>
-        </li>`
+    songUL.innerHTML += `
+      <li>
+        <div class="song-info">
+          <img class="invert" src="/img/music.svg" alt="Music Icon">
+          <div class="details">
+            <div class="song-name">${cleanTitle}</div>
+            <div class="artist-name">${cleanArtist}</div>
+          </div>
+        </div>
+        <button class="play-song" data-src="${song}">
+          <img class="invert" src="/img/play.svg" alt="Play Icon">
+        </button>
+      </li>`;
   }
 
-  // Attach an event listener to each song
   document.querySelectorAll(".play-song").forEach((button) => {
     button.addEventListener("click", () => {
-      const songFile = button.getAttribute("data-src")
-      playMusic(songFile, button.querySelector("img"))
-    })
-  })
-handleSearch();
-  return songs
+      const songFile = button.getAttribute("data-src");
+      playMusic(songFile, button.querySelector("img"));
+    });
+  });
+
+  handleSearch();
+  return songs;
 }
 
-const playMusic = (track, clickedButton = null) => {
-  const decodedTrack = decodeURIComponent(track.trim())
-  const formattedTrack = decodedTrack.replaceAll(" ", "%20")
+// ──────────────────────────────────────────
+//  Play / Pause logic
+// ──────────────────────────────────────────
+function playMusic(track, clickedButton = null) {
+  const decodedTrack = decodeURIComponent(track.trim());
+  const formattedTrack = decodedTrack.replaceAll(" ", "%20");
 
-  // Check if the same song is playing and toggle pause/play
+  // If it's the same song and it's playing, pause
   if (currentSong.src.includes(formattedTrack) && !currentSong.paused) {
-    currentSong.pause()
-    if (clickedButton) clickedButton.src = "/img/play.svg"
-    document.getElementById("play").src = "/img/play.svg"
-    return
+    currentSong.pause();
+    if (clickedButton) clickedButton.src = "/img/play.svg";
+    document.getElementById("play").src = "/img/play.svg";
+    return;
   }
 
-  // Stop current song if playing
+  // Stop current if playing
   if (!currentSong.paused || !currentSong.ended) {
-    currentSong.pause()
-    currentSong.currentTime = 0
+    currentSong.pause();
+    currentSong.currentTime = 0;
   }
 
-  // Set new song source and play
+  // Set new source and play
   setTimeout(() => {
-    currentSong.src = `/${currFolder}/${formattedTrack}`
+    currentSong.src = `/${currFolder}/${formattedTrack}`;
 
-    const cleanTitle = extractSongName(decodedTrack)
-    const cleanArtist = extractArtistName(decodedTrack)
+    const cleanTitle = extractSongName(decodedTrack);
+    const cleanArtist = extractArtistName(decodedTrack);
 
-    document.querySelector(".song-title").innerText = cleanTitle
-    document.querySelector(".song-artist").innerText = cleanArtist
+    document.querySelector(".song-title").innerText = cleanTitle;
+    document.querySelector(".song-artist").innerText = cleanArtist;
 
-    // Reset all play buttons to play icon
-    document.querySelectorAll(".play-song img").forEach((img) => (img.src = "/img/play.svg"))
+    // Reset all small play icons
+    document.querySelectorAll(".play-song img").forEach((img) => (img.src = "/img/play.svg"));
 
     currentSong
       .play()
       .then(() => {
-        if (clickedButton) clickedButton.src = "/img/pause.svg"
-        document.getElementById("play").src = "/img/pause.svg"
+        if (clickedButton) clickedButton.src = "/img/pause.svg";
+        document.getElementById("play").src = "/img/pause.svg";
       })
-      .catch((error) => console.error("Error playing the song:", error))
-  }, 100)
+      .catch((error) => console.error("Error playing the song:", error));
+  }, 100);
 }
 
+// ──────────────────────────────────────────
+//  Display albums from info.json
+// ──────────────────────────────────────────
 async function displayAlbums() {
-  const response = await fetch('/songs/');
+  const response = await fetch("/songs/");
   const html = await response.text();
   const div = document.createElement("div");
   div.innerHTML = html;
 
   const anchors = div.getElementsByTagName("a");
   const cardContainer = document.querySelector(".cardContainer");
-  cardContainer.innerHTML = '';
+  cardContainer.innerHTML = "";
 
   for (let anchor of anchors) {
-    if (anchor.href.includes('/songs/') && !anchor.href.includes('.htaccess')) {
-      const folder = anchor.href.split('/').slice(-2)[0];
+    if (anchor.href.includes("/songs/") && !anchor.href.includes(".htaccess")) {
+      const folder = anchor.href.split("/").slice(-2)[0];
       try {
         const res = await fetch(`/songs/${folder}/info.json`);
         const info = await res.json();
@@ -157,24 +170,23 @@ async function displayAlbums() {
     }
   }
 
-  // Event listeners (Explicitly refresh playlist when clicked):
-  document.querySelectorAll('.card').forEach(card => {
-    card.addEventListener('click', async () => {
+  // Add event listeners to each album card
+  document.querySelectorAll(".card").forEach((card) => {
+    card.addEventListener("click", async () => {
       const folder = card.dataset.folder;
       await getSongs(`songs/${folder}`);
-      handleSearch(); // Ensure filtering is applied after loading songs
-      if (songs.length) playMusic(songs[0]);
+      handleSearch();
+      if (songs.length) playMusic(songs[0]); // auto-play first
     });
 
-    const playBtn = card.querySelector('.green-play-btn');
-    playBtn.addEventListener('click', async (e) => {
+    const playBtn = card.querySelector(".green-play-btn");
+    playBtn.addEventListener("click", async (e) => {
       e.stopPropagation();
       const folder = card.dataset.folder;
       await getSongs(`songs/${folder}`);
-      
-      // CRUCIAL STEP: Reset search-bar to ensure all songs appear clearly
-      document.getElementById('search-bar').value = '';
-      handleSearch(); // <-- THIS ENSURES SONGS ARE VISIBLE IMMEDIATELY
+
+      document.getElementById("search-bar").value = "";
+      handleSearch();
 
       if (songs.length > 0) {
         playMusic(songs[0]);
@@ -185,168 +197,152 @@ async function displayAlbums() {
   });
 }
 
-
-
-
+// ──────────────────────────────────────────
+//  Searching for albums & songs
+// ──────────────────────────────────────────
 function handleSearch() {
-  const query = document.getElementById('search-bar').value.toLowerCase();
+  const query = document.getElementById("search-bar").value.toLowerCase();
 
-  // Filter album cards based on the query
-  const cards = document.querySelectorAll('.cardContainer .card');
-  cards.forEach(card => {
-    const title = card.querySelector('h2').innerText.toLowerCase();
-    const description = card.querySelector('p').innerText.toLowerCase();
-    card.style.display = (title.includes(query) || description.includes(query)) ? 'block' : 'none';
+  // Filter album cards
+  const cards = document.querySelectorAll(".cardContainer .card");
+  cards.forEach((card) => {
+    const title = card.querySelector("h2").innerText.toLowerCase();
+    const description = card.querySelector("p").innerText.toLowerCase();
+    card.style.display =
+      title.includes(query) || description.includes(query) ? "block" : "none";
   });
 
-  // Filter displayed songs based on the query
-  const songItems = document.querySelectorAll('.songlist ul li');
-  songItems.forEach(item => {
-    const songName = item.querySelector('.song-name').innerText.toLowerCase();
-    const artistName = item.querySelector('.artist-name').innerText.toLowerCase();
-    item.style.display = (songName.includes(query) || artistName.includes(query)) ? 'flex' : 'none';
+  // Filter songs in the current playlist
+  const songItems = document.querySelectorAll(".songlist ul li");
+  songItems.forEach((item) => {
+    const songName = item.querySelector(".song-name").innerText.toLowerCase();
+    const artistName = item.querySelector(".artist-name").innerText.toLowerCase();
+    item.style.display =
+      songName.includes(query) || artistName.includes(query) ? "flex" : "none";
   });
 }
 
-
-
-
+// ──────────────────────────────────────────
+//  Main initialization
+// ──────────────────────────────────────────
 async function main() {
-  // Display all the albums on the page
-  await displayAlbums()
+  await displayAlbums();
 
-  // Set up event listeners for player controls
-  const playButton = document.getElementById("play")
-  const seekbar = document.querySelector(".seekbar")
-  const currentTimeDisplay = document.querySelector(".current-time")
-  const totalTimeDisplay = document.querySelector(".total-time")
+  // Player controls
+  const playButton = document.getElementById("play");
+  const seekbar = document.querySelector(".seekbar");
+  const currentTimeDisplay = document.querySelector(".current-time");
+  const totalTimeDisplay = document.querySelector(".total-time");
 
-  // Attach event listener to update seekbar
+  // Keep the player time/seekbar in sync
   currentSong.addEventListener("timeupdate", () => {
-    const currentTime = currentSong.currentTime
-    const duration = currentSong.duration
-
+    const currentTime = currentSong.currentTime;
+    const duration = currentSong.duration;
     if (!isNaN(duration)) {
-      seekbar.value = (currentTime / duration) * 100 // Update seekbar position
-      currentTimeDisplay.innerText = formatTime(currentTime)
-      totalTimeDisplay.innerText = formatTime(duration)
+      seekbar.value = (currentTime / duration) * 100;
+      currentTimeDisplay.innerText = formatTime(currentTime);
+      totalTimeDisplay.innerText = formatTime(duration);
     }
-  })
+  });
 
-  // Seekbar manual update
+  // Seekbar manual scrub
   seekbar.addEventListener("input", () => {
-    const duration = currentSong.duration
+    const duration = currentSong.duration;
     if (!isNaN(duration)) {
-      currentSong.currentTime = (seekbar.value / 100) * duration
+      currentSong.currentTime = (seekbar.value / 100) * duration;
     }
-  })
+  });
 
-  // Play/Pause button
+  // Play/Pause main button
   playButton.addEventListener("click", () => {
     if (currentSong.paused) {
-      currentSong.play()
-      playButton.src = "/img/pause.svg"
+      currentSong.play();
+      playButton.src = "/img/pause.svg";
 
+      // Sync small buttons if same track
       document.querySelectorAll(".play-song img").forEach((img) => {
-        const parentButton = img.closest(".play-song")
-        if (parentButton && parentButton.getAttribute("data-src") === currentSong.src.split(`/${currFolder}/`)[1]) {
-          img.src = "/img/pause.svg"
+        const parentButton = img.closest(".play-song");
+        // decodeURIComponent for matching
+        if (
+          parentButton &&
+          parentButton.getAttribute("data-src") ===
+            decodeURIComponent(currentSong.src.split(`/${currFolder}/`)[1])
+        ) {
+          img.src = "/img/pause.svg";
         }
-      })
+      });
     } else {
-      currentSong.pause()
-      playButton.src = "/img/play.svg"
-      document.querySelectorAll(".play-song img").forEach((img) => (img.src = "/img/play.svg"))
+      currentSong.pause();
+      playButton.src = "/img/play.svg";
+      document.querySelectorAll(".play-song img").forEach((img) => (img.src = "/img/play.svg"));
     }
-  })
+  });
 
-  // Previous button
+  // Previous with decode
   document.querySelector("#previous").addEventListener("click", () => {
-    if (!currFolder || songs.length === 0) return
-
-    const currentTrack = currentSong.src.split(`/${currFolder}/`)[1]
-    const index = songs.indexOf(currentTrack)
+    if (!currFolder || !songs || songs.length === 0) return;
+    const splittedTrack = currentSong.src.split(`/${currFolder}/`)[1];
+    const currentTrack = decodeURIComponent(splittedTrack);
+    const index = songs.indexOf(currentTrack);
     if (index !== -1) {
-      playMusic(songs[index > 0 ? index - 1 : songs.length - 1])
+      playMusic(songs[index > 0 ? index - 1 : songs.length - 1]);
     } else if (songs.length > 0) {
-      playMusic(songs[0])
+      playMusic(songs[0]);
     }
-  })
+  });
 
-  // Next button
+  // Next with decode
   document.querySelector("#next").addEventListener("click", () => {
-    if (!currFolder || songs.length === 0) return
-
-    const currentTrack = currentSong.src.split(`/${currFolder}/`)[1]
-    const index = songs.indexOf(currentTrack)
+    if (!currFolder || !songs || songs.length === 0) return;
+    const splittedTrack = currentSong.src.split(`/${currFolder}/`)[1];
+    const currentTrack = decodeURIComponent(splittedTrack);
+    const index = songs.indexOf(currentTrack);
     if (index !== -1) {
-      playMusic(songs[index < songs.length - 1 ? index + 1 : 0])
+      playMusic(songs[index < songs.length - 1 ? index + 1 : 0]);
     } else if (songs.length > 0) {
-      playMusic(songs[0])
+      playMusic(songs[0]);
     }
-  })
+  });
 
   // Volume controls
-  const volumeSeekbar = document.querySelector(".volume-seekbar")
-  const volumeButton = document.querySelector(".volume-button")
+  const volumeSeekbar = document.querySelector(".volume-seekbar");
+  const volumeButton = document.querySelector(".volume-button");
+  let isMuted = false;
 
   volumeSeekbar.addEventListener("input", () => {
-    currentSong.volume = volumeSeekbar.value / 100
+    currentSong.volume = volumeSeekbar.value / 100;
+    volumeButton.src = currentSong.volume === 0 ? "/img/mute.svg" : "/img/volume.svg";
+  });
 
-    // Update volume icon based on volume level
-    if (currentSong.volume === 0) {
-      volumeButton.src = "/img/mute.svg"
-    } else {
-      volumeButton.src = "/img/volume.svg"
-    }
-  })
-
-  let isMuted = false
   volumeButton.addEventListener("click", () => {
-    isMuted = !isMuted
-    currentSong.volume = isMuted ? 0 : volumeSeekbar.value / 100
-    volumeButton.src = isMuted ? "/img/mute.svg" : "/img/volume.svg"
-  })
+    isMuted = !isMuted;
+    currentSong.volume = isMuted ? 0 : volumeSeekbar.value / 100;
+    volumeButton.src = isMuted ? "/img/mute.svg" : "/img/volume.svg";
+  });
 
   // Hamburger menu
-  const hamburger = document.querySelector(".hamburger")
-  const sidebar = document.querySelector(".left")
-  const closeButton = document.querySelector(".cross")
+  const hamburger = document.querySelector(".hamburger");
+  const sidebar = document.querySelector(".left");
+  const closeButton = document.querySelector(".cross");
 
   hamburger.addEventListener("click", () => {
-    sidebar.style.left = "0px"
-    sidebar.classList.toggle("open")
-  })
+    sidebar.style.left = "0px";
+    sidebar.classList.toggle("open");
+  });
 
   if (closeButton) {
     closeButton.addEventListener("click", () => {
-      sidebar.style.left = "-120%"
-      sidebar.classList.remove("open")
-    })
+      sidebar.style.left = "-120%";
+      sidebar.classList.remove("open");
+    });
   }
- // 👇 Add Search Functionality here (at the bottom of main)
- document.getElementById('search-btn').addEventListener('click', () => {
-  const query = document.getElementById('search-bar').value.toLowerCase();
-  const songItems = document.querySelectorAll('.songlist ul li');
 
-  songItems.forEach((item) => {
-    const songName = item.querySelector('.song-name').innerText.toLowerCase();
-    const artistName = item.querySelector('.artist-name').innerText.toLowerCase();
-
-    if (songName.includes(query) || artistName.includes(query)) {
-      item.style.display = 'flex';
-    } else {
-      item.style.display = 'none';
-    }
+  // Search
+  document.getElementById("search-btn").addEventListener("click", handleSearch);
+  document.getElementById("search-bar").addEventListener("keydown", (e) => {
+    if (e.key === "Enter") handleSearch();
   });
-});
+}
 
-// Allow search on Enter key press
-document.getElementById('search-btn').addEventListener('click', handleSearch);
-document.getElementById('search-bar').addEventListener('keydown', e => {
-  if (e.key === 'Enter') handleSearch();
-});}
-
-// Initialize the application
-main()
-
+// Finally, initialize everything
+main();
