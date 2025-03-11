@@ -136,14 +136,15 @@ function playMusic(track, clickedButton = null) {
 }
 
 // ──────────────────────────────────────────
-//  HARD-CODED ALBUMS (folder names)
+//  Display albums from a HARDCODED array
 // ──────────────────────────────────────────
 async function displayAlbums() {
-  // Replace with the actual names of your folders under /songs/
-  const albumFolders = [
+  // Hardcode the folder names you have in /songs/
+  const folders = [
     "Anuv",
     "Arijit Singh",
     "Atif Aslam",
+    "Rahat Fateh",
     "Shankar-Ehsan",
     "Shreya Goshal",
     "Vishal-Shekhar"
@@ -152,13 +153,12 @@ async function displayAlbums() {
   const cardContainer = document.querySelector(".cardContainer");
   cardContainer.innerHTML = "";
 
-  for (const folder of albumFolders) {
+  // For each folder, fetch info.json and create a card
+  for (let folder of folders) {
     try {
-      // Fetch info.json for each folder
       const res = await fetch(`/songs/${folder}/info.json`);
       const info = await res.json();
 
-      // Add a card to the UI
       cardContainer.innerHTML += `
         <div class="card" data-folder="${folder}">
           <img src="/songs/${folder}/cover.jpg" alt="Album Cover">
@@ -177,15 +177,9 @@ async function displayAlbums() {
   document.querySelectorAll(".card").forEach((card) => {
     card.addEventListener("click", async () => {
       const folder = card.dataset.folder;
-      // getSongs expects something like "songs/Anuv"
       await getSongs(`songs/${folder}`);
-
-      // Clear search box and re-run search
-      document.getElementById("search-bar").value = "";
       handleSearch();
-
-      // Auto-play the first song if it exists
-      if (songs.length) playMusic(songs[0]);
+      if (songs.length) playMusic(songs[0]); // auto-play first
     });
 
     const playBtn = card.querySelector(".green-play-btn");
