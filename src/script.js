@@ -142,7 +142,7 @@ async function displayAlbums() {
   // Hardcode the folder names you have in /songs/
   const folders = [
     "Anuv",
-    "Arijit Singh",
+    "Arjit Singh",
     "Atif Aslam",
     "Rahat Fateh",
     "Shankar-Ehsan",
