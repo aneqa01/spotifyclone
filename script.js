@@ -174,7 +174,7 @@ async function displayAlbums() {
   document.querySelectorAll(".card").forEach((card) => {
     card.addEventListener("click", async () => {
       const folder = card.dataset.folder;
-      await getSongs(`songs/${folder}`);
+      await getSongs(`/songs/${folder}`);
       handleSearch();
       if (songs.length) playMusic(songs[0]); // auto-play first
     });
