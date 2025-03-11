@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spotify - Web Player: Music for everyone</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/utility.css">
+</head> 
+
+<body>
+    <div class="container flex bg-black">
+        <div class="left ">
+            <div class="cross">
+                <img class="invert" width="30" src="/img/cross.svg" alt="">
+            </div>
+            <div class="home bg-grey rounded m-1 p-1">
+                <div class="logo">
+                  <img class="invert" src="/img/logo.svg" alt="spotify logo">
+                  <h1 class="home-text">Home</h1>
+                </div>
+              </div>
+              
+            
+            <div class="library bg-grey rounded m-1  p-1 ">
+                <div class="heading">
+                    <img class="invert" src="/img/playlist.svg" alt="" >
+                    <h2>Your Library</h2>
+                   
+                </div>
+                <div class="songlist">
+                    <ul>
+                    </ul>
+                </div>
+                
+                <div class="footer">
+                    <div><a href="https://www.spotify.com/pk-en/legal/">Legal</a></div>
+                    <div><a href="https://www.spotify.com/pk-en/safetyandprivacy/">Safety & Privacy Center</a></div>
+                    <div><a href="https://www.spotify.com/pk-en/legal/privacy-policy/">Privacy Policy</a></div>
+                    <div><a href="https://www.spotify.com/pk-en/legal/cookies-policy/">Cookies</a></div>
+                    <div><a href="https://www.spotify.com/pk-en/legal/privacy-policy/#s3">About Ads</a></div>
+                    <div><a href="https://www.spotify.com/pk-en/accessibility/">Accessibility</a></div>
+        
+                </div>
+               
+            </div>
+        </div>
+       
+        <div class="right bg-grey rounded ">
+           <div class="header">
+    <img class="hamburger invert" src="/img/hamburger.svg" alt="">
+    <div class="search-container">
+        <input type="text" id="search-bar" placeholder="Search for songs, artists..." />
+        <button id="search-btn">Search</button>
+    </div>
+    <div class="buttons">
+        <button class="signupbtn">Sign up</button>
+        <button class="loginbtn">Log in</button>
+    </div>
+</div>
+
+        
+            <div class="spotifyPlaylist">
+                <h1>Popular Artists</h1>
+                <div class="cardContainer">
+        
+                </div>
+            </div>
+        
+            <!-- Move Playbar OUTSIDE spotifyPlaylist -->
+            <div class="playbar">
+                <div class="songinfo">
+                    <img src="/img/music.svg" alt="Album Art" class="album-art invert">
+                    <div class="song-details">
+                        <div class="song-title">Song Name</div>
+                        <div class="song-artist">Artist Name</div>
+                    </div>
+                </div>
+                
+                <div class="controls-container">
+                    <!-- Playback Controls -->
+                    <div class="songbuttons invert">
+                        <img id="previous" src="/img/prevsong.svg" alt="Previous">
+                        <img id="play" src="/img/play.svg" alt="Play" class="play-pause">
+                        <img id="next" src="/img/nextsong.svg" alt="Next">
+                    </div>
+        
+                    <!-- Seekbar Positioned Below Buttons -->
+                    <div class="seekbar-container">
+                        <span class="current-time">0:00</span>
+                        <input type="range" class="seekbar" min="0" max="100" value="0">
+                        <span class="total-time">3:45</span>
+                    </div>
+                </div>
+        
+                <!-- Volume Control -->
+                <div class="volume-container">
+                    <img src="/img/volume.svg" alt="Volume" class="volume-button invert">
+                    <input type="range" class="volume-seekbar" min="0" max="100" value="100">
+                </div>
+            </div>
+        </div>
+        
+
+
+    </div>
+
+    </div>
+    <script src="/src/script.js"></script>
+</body>
+
+</html>
