@@ -281,29 +281,31 @@ async function main() {
     }
   });
 
-  // Previous with decode
+  // PREVIOUS (wrap-around)
   document.querySelector("#previous").addEventListener("click", () => {
     if (!currFolder || !songs || songs.length === 0) return;
     const splittedTrack = currentSong.src.split(`/${currFolder}/`)[1];
     const currentTrack = decodeURIComponent(splittedTrack);
     const index = songs.indexOf(currentTrack);
+
     if (index !== -1) {
-      playMusic(songs[index > 0 ? index - 1 : songs.length - 1]);
-    } else if (songs.length > 0) {
-      playMusic(songs[0]);
+      // Wrap-around: if index is 0, go to last
+      const prevIndex = (index - 1 + songs.length) % songs.length;
+      playMusic(songs[prevIndex]);
     }
   });
 
-  // Next with decode
+  // NEXT (wrap-around)
   document.querySelector("#next").addEventListener("click", () => {
     if (!currFolder || !songs || songs.length === 0) return;
     const splittedTrack = currentSong.src.split(`/${currFolder}/`)[1];
     const currentTrack = decodeURIComponent(splittedTrack);
     const index = songs.indexOf(currentTrack);
+
     if (index !== -1) {
-      playMusic(songs[index < songs.length - 1 ? index + 1 : 0]);
-    } else if (songs.length > 0) {
-      playMusic(songs[0]);
+      // Wrap-around: if index is last, go to first
+      const nextIndex = (index + 1) % songs.length;
+      playMusic(songs[nextIndex]);
     }
   });
 
