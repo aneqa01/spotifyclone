@@ -136,37 +136,40 @@ function playMusic(track, clickedButton = null) {
 }
 
 // ──────────────────────────────────────────
-//  Display albums from info.json
+//  HARD-CODED ALBUMS (folder names)
 // ──────────────────────────────────────────
 async function displayAlbums() {
-  const response = await fetch("/songs/");
-  const html = await response.text();
-  const div = document.createElement("div");
-  div.innerHTML = html;
+  // Replace with the actual names of your folders under /songs/
+  const albumFolders = [
+    "Anuv",
+    "Arijit Singh",
+    "Atif Aslam",
+    "Shankar-Ehsan",
+    "Shreya Goshal",
+    "Vishal-Shekhar"
+  ];
 
-  const anchors = div.getElementsByTagName("a");
   const cardContainer = document.querySelector(".cardContainer");
   cardContainer.innerHTML = "";
 
-  for (let anchor of anchors) {
-    if (anchor.href.includes("/songs/") && !anchor.href.includes(".htaccess")) {
-      const folder = anchor.href.split("/").slice(-2)[0];
-      try {
-        const res = await fetch(`/songs/${folder}/info.json`);
-        const info = await res.json();
+  for (const folder of albumFolders) {
+    try {
+      // Fetch info.json for each folder
+      const res = await fetch(`/songs/${folder}/info.json`);
+      const info = await res.json();
 
-        cardContainer.innerHTML += `
-          <div class="card" data-folder="${folder}">
-            <img src="/songs/${folder}/cover.jpg" alt="Album Cover">
-            <h2>${info.title}</h2>
-            <p>${info.description}</p>
-            <button class="green-play-btn">
-              <img src="/img/play.svg" alt="">
-            </button>
-          </div>`;
-      } catch (e) {
-        console.error("Error fetching info.json for", folder, e);
-      }
+      // Add a card to the UI
+      cardContainer.innerHTML += `
+        <div class="card" data-folder="${folder}">
+          <img src="/songs/${folder}/cover.jpg" alt="Album Cover">
+          <h2>${info.title}</h2>
+          <p>${info.description}</p>
+          <button class="green-play-btn">
+            <img src="/img/play.svg" alt="">
+          </button>
+        </div>`;
+    } catch (e) {
+      console.error("Error fetching info.json for", folder, e);
     }
   }
 
@@ -174,16 +177,22 @@ async function displayAlbums() {
   document.querySelectorAll(".card").forEach((card) => {
     card.addEventListener("click", async () => {
       const folder = card.dataset.folder;
-      await getSongs(`/img/songs/${folder}`);
+      // getSongs expects something like "songs/Anuv"
+      await getSongs(`songs/${folder}`);
+
+      // Clear search box and re-run search
+      document.getElementById("search-bar").value = "";
       handleSearch();
-      if (songs.length) playMusic(songs[0]); // auto-play first
+
+      // Auto-play the first song if it exists
+      if (songs.length) playMusic(songs[0]);
     });
 
     const playBtn = card.querySelector(".green-play-btn");
     playBtn.addEventListener("click", async (e) => {
       e.stopPropagation();
       const folder = card.dataset.folder;
-      await getSongs(`/img/songs/${folder}`);
+      await getSongs(`songs/${folder}`);
 
       document.getElementById("search-bar").value = "";
       handleSearch();
